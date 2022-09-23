@@ -7,7 +7,7 @@ from math import sin, cos, radians
 pygame.init()
 
 # Set parent directory. 
-os.chdir("C:/Users/df717388/OneDrive - GSK/Documents/pygame/simpsons_space_invaders")
+os.chdir("C:/Users/df717388/OneDrive - GSK/Documents/pygame/inside/simpsons_space_invaders")
 
 # Constants
 WIDTH, HEIGHT = 1600, 1000
@@ -27,15 +27,18 @@ ENEMY_FREQ = 2.5 # time in sec to add enemies to the screen.
 ENEMY_WIDTH, ENEMY_HEIGHT = 50, 80
 ENEMY_CLASH_DAMAGE = 20
 SPLATTER_TIME = 2.0 # Time in sec to keep splattered enemies on screen.
-POWERUP_DROP_SPEED = 3 # Falling speed of powerups.  
-LEMON_DROP_FREQ = random.randint(20,40)
-POWERUP_TYPES = ["lemon"]
+POWERUP_DROP_SPEED = 2 # Falling speed of powerups.
+LEMON_DROP_FREQ = random.randint(20, 40) # Also changes in function!
+POWERUP_TYPES = ["lemon", "beer", "donut"]
 LEMON_POWER_DUR = 10
-LEMON_POWERUP_VOL = 0.5
+POWERUP_VOL = 0.5
 LEMON_BULLET_DAMAGE = 3
 LEMON_BULLET_SIZE = 20
 BULLET_TYPES = ["default", "player", "lemon", "cola_bomb"]
 SMUG_FREQ = 7
+HEALTH_POWERUP_TYPES = ["beer", "donut"]
+HEALTH_POWERUP_AMOUNT = 20
+HEALTH_DROP_FREQ = random.randint(20, 40) # Also changes in function!
 
 
 # Set up window
@@ -270,11 +273,32 @@ time_last_lemon_drop_added = START_TIME # Initialise time zero
 def add_lemon_powerup(previous_time):
     """Add a powerup to fall down screen"""
     time_since_last_lemon_added = time.time() - previous_time
+    global LEMON_DROP_FREQ
     if time_since_last_lemon_added >= LEMON_DROP_FREQ:
         new_lemon_drop = Powerup(40, 25, "lemon.png", "lemon")
         powerup_group.add(new_lemon_drop)
+        LEMON_DROP_FREQ = random.randint(20, 40) # Generate new random interval
         global time_last_lemon_drop_added # Update time of last lemon drop
         time_last_lemon_drop_added = time.time()
+        
+# Drop health powerup
+time_last_health_powerup_added = START_TIME
+def add_health_powerup(previous_time):
+    """Add a donut or beer as a health powerup"""
+    time_since_last_health_added = time.time() - previous_time
+    global HEALTH_DROP_FREQ
+    if time_since_last_health_added >= HEALTH_DROP_FREQ:
+        rand_choice = random.choice(HEALTH_POWERUP_TYPES)
+        if rand_choice == "beer":
+            new_health_drop = Powerup(40, 40, "beer.png", "beer")
+        elif rand_choice == "donut":
+            new_health_drop = Powerup(40, 40, "donut.png", "donut")
+        else:
+            raise ValueError(f"health_powerup_type not valid.")
+        HEALTH_DROP_FREQ = random.randint(20, 40) # Generate new random interval
+        powerup_group.add(new_health_drop)
+        global time_last_health_powerup_added
+        time_last_health_powerup_added = time.time()           
 
 # Release enemies
 time_last_enemy_added = START_TIME
@@ -319,7 +343,7 @@ def check_time(start_time) -> float:
 # Main game function
 def main():
     clock = pygame.time.Clock()
-    global ENEMY_VEL, ENEMY_FREQ
+    global ENEMY_VEL, ENEMY_FREQ, LEMON_DROP_FREQ, HEALTH_DROP_FREQ
     player = Player(
         os.path.join("assets", "spaceship_yellow.png"),
         WIDTH//2, HEIGHT//2,
@@ -429,10 +453,16 @@ def main():
                 powerup.kill()
             # Check if collected by player
             if pygame.sprite.collide_rect(powerup, player):
-                play_sound("powerup", LEMON_POWERUP_VOL)
                 if powerup.powerup_type == "lemon":
+                    play_sound("powerup", POWERUP_VOL)
                     player.set_lemon_power(True)
-                    powerup.kill()
+                elif powerup.powerup_type == "donut":
+                    play_sound("donut", POWERUP_VOL)
+                    player.health += HEALTH_POWERUP_AMOUNT
+                elif powerup.powerup_type == "beer":
+                    play_sound("beer", POWERUP_VOL)
+                    player.health += HEALTH_POWERUP_AMOUNT
+                powerup.kill() # Remove powerup from screen. 
         
         # Turn off expired powerups
         if player.lemon_power_active:
@@ -443,6 +473,8 @@ def main():
                               WHITE, 500, 940)
             if (time_lemon_on) >= LEMON_POWER_DUR:
                 player.set_lemon_power(False)
+                
+
             
         # drawing section
         WIN.blit(SPACE, (0, 0)) # Fill the background window.
@@ -458,6 +490,7 @@ def main():
         add_enemy(time_last_enemy_added)
         enemy_group.draw(WIN)
         add_lemon_powerup(time_last_lemon_drop_added)
+        add_health_powerup(time_last_health_powerup_added)
         powerup_group.draw(WIN)
         enemies_killed_group.draw(WIN)
         pygame.display.update()
@@ -478,7 +511,7 @@ def main():
         elif score >= 45 and score < 60:
             ENEMY_FREQ = 1
         elif score >= 60:
-            ENEMY_VEL = 2
+            ENEMY_VEL = 1.7
             
         # Check if player died
         if player.health <= 0:
