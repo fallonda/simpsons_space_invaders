@@ -472,13 +472,13 @@ def main():
         # Update difficulty 
         if score >= 10 and score < 20:
             ENEMY_FREQ = 2
-            ENEMY_VEL = 2
+            ENEMY_VEL = 1.5
         elif score >= 20 and score < 30:
             ENEMY_FREQ = 1.5
         elif score >= 45 and score < 60:
             ENEMY_FREQ = 1
         elif score >= 60:
-            ENEMY_FREQ, ENEMY_VEL = 1, 3
+            ENEMY_VEL = 2
             
         # Check if player died
         if player.health <= 0:
