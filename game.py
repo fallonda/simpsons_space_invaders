@@ -2,6 +2,7 @@
 # Images taken from google. 
 
 # Packages and modules
+from numpy import sqrt
 import pygame, os, random, time
 from math import sin, cos, radians
 pygame.init()
@@ -29,7 +30,7 @@ ENEMY_CLASH_DAMAGE = 20
 SPLATTER_TIME = 2.0 # Time in sec to keep splattered enemies on screen.
 POWERUP_DROP_SPEED = 2 # Falling speed of powerups.
 LEMON_DROP_FREQ = random.randint(20, 40) # Also changes in function!
-POWERUP_TYPES = ["lemon", "beer", "donut", "pepper"]
+POWERUP_TYPES = ["lemon", "beer", "donut", "pepper", "cola", "pop_rock"]
 SCREEN_TYPES = ["space", "pepper_trip"]
 LEMON_POWER_DUR = 10
 POWERUP_VOL = 0.5
@@ -44,6 +45,10 @@ PEPPER_DROP_FREQ = random.randint(60, 80) # Also changes in function!
 PEPPER_POWER_DUR = 10
 PEPPER_BULLET_SIZE = 20
 PEPPER_BULLET_DAMAGE = 1
+LAST_COLA_OR_POP_DROPPED = "pop_rock"
+COLA_POP_FREQ = random.randint(30, 45) # Also changes in function!
+COLA_BOMB_THROW_SPEED = 5
+COLA_BOMB_EXPLOSION_SPEED = 7
 
 # Set up window
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -69,7 +74,6 @@ class Character(pygame.sprite.Sprite):
         
     def deplete_health(self, damage_taken):
         self.health -= damage_taken
-        
         
     def change_image(self, new_image):
         """Update the image of the enemy"""
@@ -104,6 +108,21 @@ class Player(Character):
                                                  self.health_icon_rect.height)))
         self.lemon_power_active = False
         self.pepper_power_active = False
+        self.cola_power_active = False
+        self.pop_rock_power_active = False
+        self.cola_bomb_power_active = False
+        self.pop_rock_rect = pygame.Rect(950, 934, 31, 37.5)
+        self.pop_rock_image = (pygame.transform.scale(
+            pygame.image.load(os.path.join("assets", "pop_rock.png")),
+                                                (self.pop_rock_rect.width,
+                                                 self.pop_rock_rect.height)))
+        self.cola_rect = pygame.Rect(1000, 934, 25, 37.5)
+        self.cola_image = (pygame.transform.scale(
+            pygame.image.load(os.path.join("assets", "cola.png")),
+                                                (self.cola_rect.width,
+                                                 self.cola_rect.height)))
+        self.armed_text = Text("stencil", 25,
+                               "ARMED", RED, 946, 906)
         
     def set_player_angle(self, keys_pressed) -> int:
         """Calculate the angle of the player image.
@@ -171,7 +190,37 @@ class Player(Character):
         self.pepper_power_active = bool
         if self.pepper_power_active == True:
             self.pepper_power_last_on_at = time.time()
+            
+    def set_cola_or_pop_rock_power(self, powerup_type, bool: bool):
+        """Boolean if a cola or pop_rock powerup has been collected"""
+        if powerup_type == "cola":
+            self.cola_power_active = bool
+        elif powerup_type == "pop_rock":
+            self.pop_rock_power_active = bool
+        else:
+            raise ValueError("powerup_type invalid, has to be 'cola' or 'pop_rock'")
+        if self.cola_power_active and self.pop_rock_power_active:
+            self.cola_bomb_power_active = True
+        else:
+            self.cola_bomb_power_active = False
+            
+    def reset_cola_bomb_values(self):
+        """Reset all values relating to the cola bomb back to false"""
+        self.cola_power_active = False
+        self.pop_rock_power_active = False
+        self.cola_bomb_power_active = False
         
+    def draw_cola_or_pop_rock(self):
+        """Draw the icons for the collected items"""
+        if self.cola_power_active:
+            WIN.blit(self.cola_image, self.cola_rect)
+        if self.pop_rock_power_active:
+            WIN.blit(self.pop_rock_image, self.pop_rock_rect)
+        if self.cola_bomb_power_active:
+            self.armed_text.draw_text(WIN)
+            
+                
+
 class Enemy(Character):
     """class for generic enemies"""
     def __init__(self, *args):
@@ -267,12 +316,54 @@ class Powerup(pygame.sprite.Sprite):
         """Move the powerup down the screen"""
         self.rect.y += POWERUP_DROP_SPEED
         
+class ColaBomb(pygame.sprite.Sprite):
+    """Cola Bomb that explodes all enemies"""
+    x_start, y_start = 1430, 850
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.rect = pygame.Rect(self.x_start, self.y_start, 40, 40) # Starting point down by homer. 
+        self.image = pygame.transform.scale(pygame.image.load(os.path.join("assets", "cola_bomb.png")),
+                                            (self.rect.width, self.rect.height))
+        self.slope = (self.y_start - (HEIGHT/2))/(self.x_start - (WIDTH/2))
+        self.explode = False
+        self.exploding = False
+        
+    def move(self):
+        """Movement for throwing the cola bomb, aims it to centre of screen"""
+        if self.explode == False and self.exploding == False:
+            self.rect.x -= COLA_BOMB_THROW_SPEED
+            self.rect.y -= COLA_BOMB_THROW_SPEED*self.slope
+            if (self.rect.x <= WIDTH/2) and (self.rect.y <= HEIGHT/2):
+                self.explode = True
+        
+    def draw_explosion(self):
+        """Draw each frame of the explosion"""
+        if self.explode == True: # First frame
+            self.rect.center = (WIDTH/2, HEIGHT/2)
+            self.rect.width, self.rect.height = 10, 10
+            self.image = pygame.transform.scale(pygame.image.load(os.path.join("assets", "explosion.png")),
+                                                (self.rect.width, self.rect.height))
+            self.explode = False
+            self.exploding = True
+            play_sound("explosion", 0.5, fadeout_ms=4000, fadeout=True)
+        if self.exploding: # Subsequent frames to grow the explosion
+            self.rect.width += COLA_BOMB_EXPLOSION_SPEED
+            self.rect.height += COLA_BOMB_EXPLOSION_SPEED
+            self.rect.center = (WIDTH/2, HEIGHT/2)
+            self.image = pygame.transform.scale(pygame.image.load(os.path.join("assets", "explosion.png")),
+                                                (self.rect.width, self.rect.height))
+            if self.rect.width >= 400:
+                self.kill()
+                kill_all_enemies("cola_bomb")
+                
+            
         
 # Groups
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 enemies_killed_group = pygame.sprite.Group()
 powerup_group = pygame.sprite.Group()
+colabomb_group = pygame.sprite.Group()
 
 #----------
 # Functions
@@ -299,7 +390,7 @@ def add_health_powerup(previous_time):
     if time_since_last_health_added >= HEALTH_DROP_FREQ:
         rand_choice = random.choice(HEALTH_POWERUP_TYPES)
         if rand_choice == "beer":
-            new_health_drop = Powerup(40, 40, "beer.png", "beer")
+            new_health_drop = Powerup(50, 50, "beer.png", "beer")
         elif rand_choice == "donut":
             new_health_drop = Powerup(40, 40, "donut.png", "donut")
         else:
@@ -321,7 +412,27 @@ def add_pepper(previous_time):
         PEPPER_DROP_FREQ = random.randint(60, 80)
         global time_last_pepper_added
         time_last_pepper_added = time.time()
-
+        
+# Drop cola and pop rocks
+time_last_cola_or_pop_added = START_TIME
+def add_cola_or_pop(previous_time):
+    """Add either cola or pop rocks in alternating fashion"""
+    time_since_last_cola_or_pop_added = time.time() - previous_time
+    global COLA_POP_FREQ
+    global LAST_COLA_OR_POP_DROPPED
+    if time_since_last_cola_or_pop_added >= COLA_POP_FREQ:
+        if LAST_COLA_OR_POP_DROPPED == "pop_rock":
+            new_cola_or_pop_drop = Powerup(25, 37.5, "cola.png", "cola")
+            LAST_COLA_OR_POP_DROPPED = "cola"
+        else:
+            new_cola_or_pop_drop = Powerup(31, 37.5, "pop_rock.png", "pop_rock")
+            LAST_COLA_OR_POP_DROPPED = "pop_rock"
+        powerup_group.add(new_cola_or_pop_drop)
+        COLA_POP_FREQ = random.randint(30, 45)
+        global time_last_cola_or_pop_added
+        time_last_cola_or_pop_added = time.time()
+    
+    
 # Release enemies
 time_last_enemy_added = START_TIME
 def add_enemy(previous_time):
@@ -339,6 +450,7 @@ def add_enemy(previous_time):
         enemy_group.add(new_enemy)
         global time_last_enemy_added # Update the time_last_enemy_added.  
         time_last_enemy_added = time.time()
+        
     
 def random_enemy_start():
     left_margin = (-ENEMY_WIDTH, random.randrange(0, HEIGHT*3/4))
@@ -356,12 +468,13 @@ def play_sound(folder, volume, fadeout_ms=None, fadeout:bool=False):
     sound.play()
     if fadeout:
         sound.fadeout(fadeout_ms)
+
+def kill_all_enemies(bullet_type):
+    """Wipe out all enemies on screen (e.g. with colabomb)"""
+    for enemy in enemy_group:
+        enemy.set_hit_by(bullet_type)
+        enemy.health = 0
         
-def check_time(start_time) -> float:
-    """Give the time elapsed in seconds since the start of the game"""
-    return (round(time.time() - start_time, 2))
-    
-    
 # Main game function
 def main():
     clock = pygame.time.Clock()
@@ -427,8 +540,13 @@ def main():
                                         )
                         play_sound("shooting", 0.1, 200, True)
                         bullet_group.add(bullet)
-                    
-                    
+                        
+                if event.key == pygame.K_RETURN:
+                    if player.cola_bomb_power_active:
+                        colabomb_group.add(ColaBomb())
+                        play_sound("throw_colabomb", 0.8)
+                        player.reset_cola_bomb_values()
+                        
                 # Rotate player by 180 deg
                 if event.key == pygame.K_DOWN:
                     player.rotate_180()
@@ -478,6 +596,8 @@ def main():
                     enemy.kill_and_splat("kang_splatted.png", rotate_randomly=True)
                 elif enemy.hit_by == "pepper":
                     enemy.kill_and_splat("kang_on_fire.png", rotate_randomly=False)
+                elif enemy.hit_by == "cola_bomb":
+                    enemy.kill_and_splat("explosion.png", rotate_randomly=True)
                 else:
                     raise ValueError(f"enemy.hit_by value '{enemy.hit_by}' not valid.") 
                 enemies_killed_group.add(enemy) # Transfer enemy to killed group.
@@ -510,7 +630,20 @@ def main():
                 elif powerup.powerup_type == "pepper":
                     play_sound("pepper_trip", POWERUP_VOL)
                     player.set_pepper_power(True)
+                elif powerup.powerup_type == "cola":
+                    play_sound("powerup", POWERUP_VOL)
+                    player.set_cola_or_pop_rock_power("cola", True)
+                elif powerup.powerup_type == "pop_rock":
+                    play_sound("powerup", POWERUP_VOL)
+                    player.set_cola_or_pop_rock_power("pop_rock", True)
+                else:
+                    raise ValueError(f"powerup.powerup_type '{powerup.powerup_type}', needs to be one of {POWERUP_TYPES}")   
                 powerup.kill() # Remove powerup from screen. 
+        
+        # Move colabomb
+        for colabomb in colabomb_group:
+            colabomb.move()
+            colabomb.draw_explosion()
         
         # Turn off expired powerups
         if player.lemon_power_active:
@@ -529,7 +662,11 @@ def main():
                                f"Pepper trip remaining: {pepper_time_remaining} s",
                                WHITE, 500, 970)
             if (time_pepper_on) >= PEPPER_POWER_DUR:
-                player.set_pepper_power(False)   
+                player.set_pepper_power(False)
+                
+        if player.cola_power_active or player.pop_rock_power_active or player.cola_bomb_power_active:
+            player.draw_cola_or_pop_rock()
+
 
             
         # drawing section
@@ -552,6 +689,9 @@ def main():
         add_lemon_powerup(time_last_lemon_drop_added)
         add_pepper(time_last_pepper_added)
         add_health_powerup(time_last_health_powerup_added)
+        add_cola_or_pop(time_last_cola_or_pop_added)
+        player.draw_cola_or_pop_rock()
+        colabomb_group.draw(WIN)
         powerup_group.draw(WIN)
         enemies_killed_group.draw(WIN)
         pygame.display.update()
