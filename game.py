@@ -7,7 +7,7 @@ from math import sin, cos, radians
 pygame.init()
 
 # Set parent directory. 
-os.chdir("C:/Users/df717388/OneDrive - GSK/Documents/pygame/inside/simpsons_space_invaders")
+os.chdir("C:/Users/df717388/OneDrive - GSK/Documents/pygame/simpsons_space_invaders")
 
 # Constants
 WIDTH, HEIGHT = 1600, 1000
@@ -29,23 +29,30 @@ ENEMY_CLASH_DAMAGE = 20
 SPLATTER_TIME = 2.0 # Time in sec to keep splattered enemies on screen.
 POWERUP_DROP_SPEED = 2 # Falling speed of powerups.
 LEMON_DROP_FREQ = random.randint(20, 40) # Also changes in function!
-POWERUP_TYPES = ["lemon", "beer", "donut"]
+POWERUP_TYPES = ["lemon", "beer", "donut", "pepper"]
+SCREEN_TYPES = ["space", "pepper_trip"]
 LEMON_POWER_DUR = 10
 POWERUP_VOL = 0.5
 LEMON_BULLET_DAMAGE = 3
 LEMON_BULLET_SIZE = 20
-BULLET_TYPES = ["default", "player", "lemon", "cola_bomb"]
+BULLET_TYPES = ["default", "player", "lemon", "cola_bomb", "pepper"]
 SMUG_FREQ = 7
 HEALTH_POWERUP_TYPES = ["beer", "donut"]
 HEALTH_POWERUP_AMOUNT = 20
 HEALTH_DROP_FREQ = random.randint(20, 40) # Also changes in function!
-
+PEPPER_DROP_FREQ = random.randint(60, 80) # Also changes in function!
+PEPPER_POWER_DUR = 10
+PEPPER_BULLET_SIZE = 20
+PEPPER_BULLET_DAMAGE = 1
 
 # Set up window
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Game window") # Title of window.
+pygame.display.set_caption("Space Cadets: Lemon Defenders") # Title of window.
 SPACE = pygame.transform.scale(
     pygame.image.load(os.path.join("assets", "simpsons_space.jpg")), (WIDTH, HEIGHT)
+)
+PEPPER_LAND = pygame.transform.scale(
+    pygame.image.load(os.path.join("assets", "pepper_land.png")), (WIDTH, HEIGHT)
 )
 
 # Classes
@@ -96,6 +103,7 @@ class Player(Character):
                                                 (self.health_icon_rect.width,
                                                  self.health_icon_rect.height)))
         self.lemon_power_active = False
+        self.pepper_power_active = False
         
     def set_player_angle(self, keys_pressed) -> int:
         """Calculate the angle of the player image.
@@ -157,7 +165,12 @@ class Player(Character):
         self.lemon_power_active = bool
         if self.lemon_power_active == True:
             self.lemon_power_last_on_at = time.time()
-        
+    
+    def set_pepper_power(self, bool: bool):
+        """Turn on or off the pepper power"""
+        self.pepper_power_active = bool
+        if self.pepper_power_active == True:
+            self.pepper_power_last_on_at = time.time()
         
 class Enemy(Character):
     """class for generic enemies"""
@@ -254,8 +267,7 @@ class Powerup(pygame.sprite.Sprite):
         """Move the powerup down the screen"""
         self.rect.y += POWERUP_DROP_SPEED
         
-
-
+        
 # Groups
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
@@ -295,7 +307,20 @@ def add_health_powerup(previous_time):
         HEALTH_DROP_FREQ = random.randint(20, 40) # Generate new random interval
         powerup_group.add(new_health_drop)
         global time_last_health_powerup_added
-        time_last_health_powerup_added = time.time()           
+        time_last_health_powerup_added = time.time()    
+
+# Drop pepper        
+time_last_pepper_added = START_TIME
+def add_pepper(previous_time):
+    """Add a chili pepper that will flip the background"""
+    time_since_last_pepper_added = time.time() - previous_time
+    global PEPPER_DROP_FREQ
+    if time_since_last_pepper_added >= PEPPER_DROP_FREQ:
+        new_pepper_drop = Powerup(20, 40, "pepper.png", "pepper")
+        powerup_group.add(new_pepper_drop)
+        PEPPER_DROP_FREQ = random.randint(60, 80)
+        global time_last_pepper_added
+        time_last_pepper_added = time.time()
 
 # Release enemies
 time_last_enemy_added = START_TIME
@@ -373,6 +398,26 @@ def main():
                                         LEMON_BULLET_DAMAGE, player.player_deg,
                                         "lemon", "lemon.png"
                                         )
+                        play_sound("shooting", 0.1, 200, True)
+                        bullet_group.add(bullet)
+                    elif player.pepper_power_active: # pepper bullet
+                        bullet1 = Bullet(player.x_center,
+                                        player.y_center,
+                                        PEPPER_BULLET_SIZE, PEPPER_BULLET_SIZE,
+                                        PEPPER_BULLET_DAMAGE, player.player_deg - 10,
+                                        "pepper", "pepper_fire.png")
+                        bullet2 = Bullet(player.x_center,
+                                        player.y_center,
+                                        PEPPER_BULLET_SIZE, PEPPER_BULLET_SIZE,
+                                        PEPPER_BULLET_DAMAGE, player.player_deg,
+                                        "pepper", "pepper_fire.png")
+                        bullet3 = Bullet(player.x_center,
+                                        player.y_center,
+                                        PEPPER_BULLET_SIZE, PEPPER_BULLET_SIZE,
+                                        PEPPER_BULLET_DAMAGE, player.player_deg + 10,
+                                        "pepper", "pepper_fire.png")
+                        bullet_group.add([bullet1, bullet2, bullet3])
+                        play_sound("shooting_fire", 0.2)
                     else: # normal bullet
                         bullet = Bullet(player.x_center,
                                         player.y_center,
@@ -380,8 +425,9 @@ def main():
                                         DEFAULT_BULLET_DAMAGE, player.player_deg,
                                         "default", "default_bullet.png"
                                         )
-                    play_sound("shooting", 0.1, 200, True)
-                    bullet_group.add(bullet)
+                        play_sound("shooting", 0.1, 200, True)
+                        bullet_group.add(bullet)
+                    
                     
                 # Rotate player by 180 deg
                 if event.key == pygame.K_DOWN:
@@ -430,6 +476,8 @@ def main():
                     enemy.kill_and_splat("kang_lemon_face.png", rotate_randomly=False)
                 elif enemy.hit_by in ["default", "player"]:
                     enemy.kill_and_splat("kang_splatted.png", rotate_randomly=True)
+                elif enemy.hit_by == "pepper":
+                    enemy.kill_and_splat("kang_on_fire.png", rotate_randomly=False)
                 else:
                     raise ValueError(f"enemy.hit_by value '{enemy.hit_by}' not valid.") 
                 enemies_killed_group.add(enemy) # Transfer enemy to killed group.
@@ -459,6 +507,9 @@ def main():
                 elif powerup.powerup_type == "beer":
                     play_sound("beer", POWERUP_VOL)
                     player.health += HEALTH_POWERUP_AMOUNT
+                elif powerup.powerup_type == "pepper":
+                    play_sound("pepper_trip", POWERUP_VOL)
+                    player.set_pepper_power(True)
                 powerup.kill() # Remove powerup from screen. 
         
         # Turn off expired powerups
@@ -466,15 +517,27 @@ def main():
             time_lemon_on = time.time() - player.lemon_power_last_on_at
             lemon_time_remaining = round(LEMON_POWER_DUR - time_lemon_on)
             lemon_text = Text("arial_bold", 30,
-                              f"Lemon power remaining: {lemon_time_remaining} sec",
+                              f"Lemon power remaining: {lemon_time_remaining} s",
                               WHITE, 500, 940)
             if (time_lemon_on) >= LEMON_POWER_DUR:
                 player.set_lemon_power(False)
-                
+        
+        if player.pepper_power_active:
+            time_pepper_on = time.time() - player.pepper_power_last_on_at
+            pepper_time_remaining = round(PEPPER_POWER_DUR - time_pepper_on)
+            pepper_text = Text("arial_bold", 30,
+                               f"Pepper trip remaining: {pepper_time_remaining} s",
+                               WHITE, 500, 970)
+            if (time_pepper_on) >= PEPPER_POWER_DUR:
+                player.set_pepper_power(False)   
 
             
         # drawing section
-        WIN.blit(SPACE, (0, 0)) # Fill the background window.
+        if player.pepper_power_active:
+            WIN.blit(PEPPER_LAND, (0, 0))
+            pepper_text.draw_text(WIN)
+        else:
+            WIN.blit(SPACE, (0, 0))
         score_text.update_text(f"Score: {score}", WHITE)
         score_text.draw_text(WIN)
         player_health_text.update_text(f"{player.health}%", WHITE)
@@ -487,6 +550,7 @@ def main():
         add_enemy(time_last_enemy_added)
         enemy_group.draw(WIN)
         add_lemon_powerup(time_last_lemon_drop_added)
+        add_pepper(time_last_pepper_added)
         add_health_powerup(time_last_health_powerup_added)
         powerup_group.draw(WIN)
         enemies_killed_group.draw(WIN)
