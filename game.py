@@ -76,7 +76,6 @@ class Character(pygame.sprite.Sprite):
                                                 (width, height)))
         self.explosion_rect = self.image.get_rect(center = self.rect.center)
         
-        
     def rotate_image_randomly(self):
         """Rotate the enemy image to random angle"""
         self.image = pygame.transform.rotate(self.image, random.randint(0, 359))
@@ -98,7 +97,6 @@ class Player(Character):
                                                  self.health_icon_rect.height)))
         self.lemon_power_active = False
         
-            
     def set_player_angle(self, keys_pressed) -> int:
         """Calculate the angle of the player image.
         Can be a pos or neg integer""" 
@@ -161,7 +159,6 @@ class Player(Character):
             self.lemon_power_last_on_at = time.time()
         
         
-
 class Enemy(Character):
     """class for generic enemies"""
     def __init__(self, *args):
@@ -203,7 +200,7 @@ class Bullet(pygame.sprite.Sprite):
     """Bullets can have an image, size, speed, direction, damage"""
     def __init__(self, x_start, y_start, width, height, damage, angle_at_firing, bullet_type, image) :
         pygame.sprite.Sprite.__init__(self)
-        self.rect = pygame.Rect(x_start, y_start, width, height)
+        self.rect = pygame.Rect(x_start-(width/2), y_start-(height/2), width, height)
         self.image = pygame.transform.scale(
             pygame.image.load(os.path.join("assets", image)),
             (width, height))
@@ -511,7 +508,7 @@ def main():
         elif score >= 45 and score < 60:
             ENEMY_FREQ = 1
         elif score >= 60:
-            ENEMY_VEL = 1.7
+            ENEMY_VEL = 1.8
             
         # Check if player died
         if player.health <= 0:
