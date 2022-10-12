@@ -8,10 +8,12 @@ from math import sin, cos, radians
 pygame.init()
 
 # Set parent directory. 
-os.chdir("C:/Users/df717388/OneDrive - GSK/Documents/pygame/simpsons_space_invaders")
+os.chdir("C:/Users/David/Documents/repos/simpsons_space_invaders")
 
 # Constants
-WIDTH, HEIGHT = 1600, 1000
+ASPECT_RATIO = 1.6
+HEIGHT = 720
+WIDTH = HEIGHT * ASPECT_RATIO
 FPS = 60
 VEL = 6
 BULLET_VEL = 20
@@ -101,7 +103,7 @@ class Player(Character):
         Character.__init__(self, *args)
         self.player_angle = 0
         self.player_deg = 0
-        self.health_icon_rect = pygame.Rect(250, 934, 30, 30)
+        self.health_icon_rect = pygame.Rect(WIDTH*0.15625, HEIGHT*0.934, 30, 30)
         self.health_icon = (pygame.transform.scale(
             pygame.image.load(os.path.join("assets", "health_icon.png")),
                                                 (self.health_icon_rect.width,
@@ -111,18 +113,18 @@ class Player(Character):
         self.cola_power_active = False
         self.pop_rock_power_active = False
         self.cola_bomb_power_active = False
-        self.pop_rock_rect = pygame.Rect(950, 934, 31, 37.5)
+        self.pop_rock_rect = pygame.Rect(WIDTH*0.59375, HEIGHT*0.934, 31, 37.5)
         self.pop_rock_image = (pygame.transform.scale(
             pygame.image.load(os.path.join("assets", "pop_rock.png")),
                                                 (self.pop_rock_rect.width,
                                                  self.pop_rock_rect.height)))
-        self.cola_rect = pygame.Rect(1000, 934, 25, 37.5)
+        self.cola_rect = pygame.Rect(WIDTH*0.625, HEIGHT*0.934, 25, 37.5)
         self.cola_image = (pygame.transform.scale(
             pygame.image.load(os.path.join("assets", "cola.png")),
                                                 (self.cola_rect.width,
                                                  self.cola_rect.height)))
         self.armed_text = Text("stencil", 25,
-                               "ARMED", RED, 946, 906)
+                               "ARMED", RED, WIDTH*0.59125, HEIGHT*0.906)
         
     def set_player_angle(self, keys_pressed) -> int:
         """Calculate the angle of the player image.
@@ -485,8 +487,8 @@ def main():
         SPACESHIP_WIDTH, SPACESHIP_HEIGHT, 100
         )
     score = 0
-    score_text = Text("arial_bold", 30, f"Score: {score}", WHITE, 40, 940)
-    player_health_text = Text("arial_bold", 30, f"{player.health}%", WHITE, 285, 940)
+    score_text = Text("arial_bold", 30, f"Score: {score}", WHITE, WIDTH*0.025, HEIGHT*0.94)
+    player_health_text = Text("arial_bold", 30, f"{player.health}%", WHITE, WIDTH*0.178, HEIGHT*0.94)
     played_smug_sound = False 
     
     # Game loop
@@ -651,7 +653,7 @@ def main():
             lemon_time_remaining = round(LEMON_POWER_DUR - time_lemon_on)
             lemon_text = Text("arial_bold", 30,
                               f"Lemon power remaining: {lemon_time_remaining} s",
-                              WHITE, 500, 940)
+                              WHITE, WIDTH*0.5, HEIGHT*0.94)
             if (time_lemon_on) >= LEMON_POWER_DUR:
                 player.set_lemon_power(False)
         
@@ -660,7 +662,7 @@ def main():
             pepper_time_remaining = round(PEPPER_POWER_DUR - time_pepper_on)
             pepper_text = Text("arial_bold", 30,
                                f"Pepper trip remaining: {pepper_time_remaining} s",
-                               WHITE, 500, 970)
+                               WHITE, WIDTH*0.5, HEIGHT*0.97)
             if (time_pepper_on) >= PEPPER_POWER_DUR:
                 player.set_pepper_power(False)
                 
