@@ -7,8 +7,8 @@ import os
 from random import randint
 from time import time
 # Internal
-import settings as s
-from utils import Text
+import simpsons_space_invaders.settings as s
+from simpsons_space_invaders.utils import Text
 
 # Constants related to player
 PLAYER_VEL = 6

@@ -1,7 +1,7 @@
 import pygame, os
-import settings as s
+import simpsons_space_invaders.settings as s
 from math import sin, cos, radians
-from utils import play_sound
+from simpsons_space_invaders.utils import play_sound
 
 # Constants related to projectiles
 BULLET_VEL = 20

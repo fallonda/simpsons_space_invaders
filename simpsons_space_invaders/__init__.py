@@ -1,0 +1,1 @@
+from simpsons_space_invaders import *

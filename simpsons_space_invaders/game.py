@@ -6,12 +6,12 @@ import pygame, os
 from time import time, sleep
 
 # Internal
-from player import Player
-from utils import Text, play_sound
-import settings as s
-from projectiles import Bullet, LemonBullet, PepperBullet, ColaBomb
-from powerups import PowerupDropper, LEMON_POWER_DUR, PEPPER_POWER_DUR
-from enemies import ENEMY_CLASH_DAMAGE, SPLATTER_TIME, EnemyDropper
+from simpsons_space_invaders.player import Player
+from simpsons_space_invaders.utils import Text, play_sound
+import simpsons_space_invaders.settings as s
+from simpsons_space_invaders.projectiles import Bullet, LemonBullet, PepperBullet, ColaBomb
+from simpsons_space_invaders.powerups import PowerupDropper, LEMON_POWER_DUR, PEPPER_POWER_DUR
+from simpsons_space_invaders.enemies import ENEMY_CLASH_DAMAGE, SPLATTER_TIME, EnemyDropper
 
 pygame.init()
 
