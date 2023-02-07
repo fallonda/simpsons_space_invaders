@@ -1,7 +1,8 @@
-from player import Character
-import settings as s
+from simpsons_space_invaders.player import Character
+import simpsons_space_invaders.settings as s
 from time import time
 import random, os
+from math import hypot, ceil, floor
 
 
 ENEMY_WIDTH = s.HEIGHT // 14
@@ -12,26 +13,38 @@ SPLATTER_TIME = 1.2  # Time in sec to keep splattered enemies on screen.
 class Enemy(Character):
     """class for generic enemies"""
 
-    def __init__(self, enemy_vel, *args):
+    def __init__(self, *args, enemy_vel:float = 1.0):
         Character.__init__(self, *args)
         self.enemy_vel = enemy_vel
-
+        
     def move_towards(self, chase_x, chase_y):
-        """Chase the player"""
-        x_diff = chase_x - self.rect.centerx
-        y_diff = chase_y - self.rect.centery
-        if x_diff < -1:
-            self.rect.x -= self.enemy_vel  # Move x by 1 and it's sign.
-        elif x_diff > 1:
-            self.rect.x += self.enemy_vel  # Move x by 1 and it's sign.
-        else:
-            self.rect.x = self.rect.x  # Don't move if diff is zero.
-        if y_diff < -1:
-            self.rect.y -= self.enemy_vel
-        elif y_diff > 1:
-            self.rect.y += self.enemy_vel
-        else:
-            self.rect.y = self.rect.y
+        """Move towards the player.
+
+        Parameters
+        ----------
+        chase_x : float
+            The x position of the player to be chased. 
+        chase_y : float
+            The y position of the player to be chased. 
+        """
+        self.x_diff = (chase_x - self.rect.centerx)
+        self.y_diff = (chase_y - self.rect.centery)
+        # Calculate hypotenuse distance, and divide by it to get normalised unit vector. 
+        self.direct_distance = hypot(self.x_diff, self.y_diff)
+        self.x_move = self.x_diff/self.direct_distance * self.enemy_vel
+        self.y_move = self.y_diff/self.direct_distance * self.enemy_vel
+        # Round positive floats up and negative floats down. 
+        if self.x_move > 0:
+            self.x_move = ceil(self.x_move)
+        elif self.x_move < 0:
+            self.x_move = floor(self.x_move)
+        if self.y_move > 0:
+            self.y_move = ceil(self.y_move)
+        elif self.y_move < 0:
+            self.y_move = floor(self.y_move)
+        # Move it
+        self.rect.centerx += self.x_move
+        self.rect.centery += self.y_move
 
     def kill_and_splat(self, new_image, rotate_randomly: bool):
         self.kill()
@@ -72,13 +85,13 @@ class EnemyDropper():
         if time_since_last_added >= self.enemy_freq:
             enemy_start_pos = self.random_enemy_start()
             new_enemy = Enemy(
-                self.enemy_vel,
                 os.path.join("assets", "kang_transparent.png"),
                 enemy_start_pos[0], # width start point
                 enemy_start_pos[1], # height start point
                 ENEMY_WIDTH,
                 ENEMY_HEIGHT,
                 3,  # enemy health.
+                enemy_vel = self.enemy_vel,
             )
             group.add(new_enemy)  
             self.previous_time = time()
@@ -87,13 +100,13 @@ class EnemyDropper():
         """Increase the frequency of enemy drops as score increases."""
         if (score >= 10) & (score < 20):
             self.enemy_freq = 2
-            self.enemy_vel = 1.5
+            self.enemy_vel = 1.1
         elif (score >= 20) & (score < 30):
             self.enemy_freq = 1.5
         elif (score >= 30) & (score < 50):
             self.enemy_freq = 1
         elif (score >= 50) & (score < 70):
-            self.enemy_vel = 1.8
+            self.enemy_vel = 1.2
         elif score >= 70:
             # Slowly increase freq and speed for every 10 scored above 70.
             score_from_top = score - self.top_counter

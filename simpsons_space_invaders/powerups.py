@@ -1,6 +1,6 @@
 import pygame, os
 from random import randint
-import settings as s
+import simpsons_space_invaders.settings as s
 from utils import play_sound
 from time import time
 
