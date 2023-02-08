@@ -25,3 +25,4 @@ PEPPER_LAND = pygame.transform.scale(
     pygame.image.load(os.path.join("assets", "pepper_land.png")),
     (WIDTH, HEIGHT)
 )
+

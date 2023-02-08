@@ -45,7 +45,7 @@ def main():
         s.WIDTH * 0.19, s.HEIGHT * 0.94
     )
     paused_text = Text(
-        "arial", 50, "PAUSED", s.WHITE,
+        "arial", 70, "PAUSED", s.WHITE,
         s.WIDTH//2,
         s.HEIGHT//2,
         set_by="center",
@@ -337,6 +337,7 @@ def main():
             
         # Check if player died
         if player.health <= 0:
+            # TODO: write the score to a file. 
             play_sound("explosion", 0.5, fadeout_ms=4000, fadeout=True)
             pos_list = list(range(0, 200, 10))
             for dim in pos_list:
@@ -348,24 +349,19 @@ def main():
             sleep(7)
             running = False  # End the game.
         
-            
-    
-    # At the indent of the while loop.  
+    # At the indent of the while loop (when running = False)
     pygame.quit()
-    print("You quit the game. Thanks for playing!")
-
 
 # Menus
 mainmenu = pygame_menu.Menu(
     "Simpsons space invaders",
     s.WIDTH, s.HEIGHT,
-    theme=themes.THEME_SOLARIZED
+    theme=themes.THEME_SOLARIZED,
+    onclose=pygame_menu.events.RESET
 )
-mainmenu.add.text_input('Name: ', default='username', maxchar=10)
+mainmenu.add.text_input('Name: ', default='username', maxchar=12)
 mainmenu.add.button('Play', main)
 mainmenu.add.button('Quit', pygame_menu.events.EXIT)
 mainmenu.mainloop(s.WIN)
 
-# Run
-#if __name__ == "__main__":
-#    main()
+
