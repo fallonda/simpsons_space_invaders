@@ -5,14 +5,20 @@ import random
 
 class Text:
     """Draw text on screen."""
-    def __init__(self, font, size, text, colour, x, y):
+    def __init__(self, font, size, text, colour, x, y, set_by="topleft"):
         self.font_path = pygame.font.match_font(font)
         self.font = pygame.font.Font(self.font_path, size)
         self.text = self.font.render(text, True, colour, None)
         self.rect = self.text.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
+        if set_by == "topleft":
+            self.rect.x = x
+            self.rect.y = y
+        elif set_by == "center":
+            self.rect.centerx = x
+            self.rect.centery = y
+        else:
+            raise ValueError("set_by can only have the options 'topleft' or 'center'.")
+        
     def update_text(self, new_text, colour):
         self.text = self.font.render(new_text, True, colour, None)
 
@@ -30,3 +36,5 @@ def play_sound(folder, volume, fadeout_ms=None, fadeout: bool = False):
     sound.play()
     if fadeout:
         sound.fadeout(fadeout_ms)
+        
+

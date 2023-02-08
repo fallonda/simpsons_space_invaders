@@ -4,6 +4,8 @@
 # Packages and modules
 import pygame, os
 from time import time, sleep
+import pygame_menu
+from pygame_menu import themes
 
 # Internal
 from simpsons_space_invaders.player import Player
@@ -13,6 +15,7 @@ from simpsons_space_invaders.projectiles import Bullet, LemonBullet, PepperBulle
 from simpsons_space_invaders.powerups import PowerupDropper, LEMON_POWER_DUR, PEPPER_POWER_DUR
 from simpsons_space_invaders.enemies import ENEMY_CLASH_DAMAGE, SPLATTER_TIME, EnemyDropper
 
+# pygame setup
 pygame.init()
 
 # Groups
@@ -22,6 +25,8 @@ enemies_killed_group = pygame.sprite.Group()
 powerup_group = pygame.sprite.Group()
 colabomb_group = pygame.sprite.Group()
 
+
+
 # Main game function
 def main():
     # Initialisations
@@ -29,6 +34,8 @@ def main():
     player = Player()
     score = 0
     played_smug_sound = False
+    
+    # Text on screen
     score_text = Text(
         "arial_bold", 30, f"Score: {score}", s.WHITE,
         s.WIDTH * 0.025, s.HEIGHT * 0.94
@@ -36,6 +43,12 @@ def main():
     player_health_text = Text(
         "arial_bold", 30, f"{player.health}%", s.WHITE,
         s.WIDTH * 0.19, s.HEIGHT * 0.94
+    )
+    paused_text = Text(
+        "arial", 50, "PAUSED", s.WHITE,
+        s.WIDTH//2,
+        s.HEIGHT//2,
+        set_by="center",
     )
     # Objects that drop powerups
     lemon_dropper = PowerupDropper(40, 25, "lemon.png", "lemon")
@@ -49,16 +62,37 @@ def main():
 
     # Game loop
     running = True
+    paused = False
     while running:
         clock.tick(s.FPS)
         # Handling
-        for event in pygame.event.get():
+        events = pygame.event.get()
+        for event in events:
             # Check for window close.
             if event.type == pygame.QUIT:
                 running = False
+            # pause game    
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    paused = True
+            # unpause game
+            while paused:
+                for event in pygame.event.get():
+                    # Draw paused text on screen. 
+                    paused_text.draw_text(s.WIN)
+                    # Press escape to unpause. 
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            paused = False
+                    # Still allow quit window during pause. 
+                    if event.type == pygame.QUIT:
+                        running = False
+                        paused = False
+                    # refresh screen while paused.
+                    pygame.display.update()
+    
             # Key presses
             if event.type == pygame.KEYDOWN:
-                
                 # Firing bullets 
                 if event.key == pygame.K_SPACE:
                     player.get_degrees() # Sets the angle of the player. 
@@ -313,11 +347,25 @@ def main():
             play_sound("player_lose", 1.0)
             sleep(7)
             running = False  # End the game.
-
+        
+            
+    
+    # At the indent of the while loop.  
     pygame.quit()
     print("You quit the game. Thanks for playing!")
 
 
+# Menus
+mainmenu = pygame_menu.Menu(
+    "Simpsons space invaders",
+    s.WIDTH, s.HEIGHT,
+    theme=themes.THEME_SOLARIZED
+)
+mainmenu.add.text_input('Name: ', default='username', maxchar=10)
+mainmenu.add.button('Play', main)
+mainmenu.add.button('Quit', pygame_menu.events.EXIT)
+mainmenu.mainloop(s.WIN)
+
 # Run
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
