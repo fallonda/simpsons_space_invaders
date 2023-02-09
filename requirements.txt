@@ -4,6 +4,7 @@ exceptiongroup==1.1.0
 iniconfig==2.0.0
 numpy==1.24.1
 packaging==23.0
+pandas==1.5.3
 pluggy==1.0.0
 pygame==2.1.2
 pygame-menu==4.3.6
@@ -11,6 +12,9 @@ Pyment==0.3.3
 pyperclip==1.8.2
 pytest==7.2.1
 pytest-cov==4.0.0
--e git+https://github.com/fallonda/simpsons_space_invaders.git@66b0f9dab09a4c2d87faa6ccdce63793168b3fa4#egg=simpsons_space_invaders
+python-dateutil==2.8.2
+pytz==2022.7.1
+-e git+https://github.com/fallonda/simpsons_space_invaders.git@6d0958c64fabc0b5a7eebb36a29e6d0800aeddd5#egg=simpsons_space_invaders
+six==1.16.0
 tomli==2.0.1
 typing-extensions==4.4.0
