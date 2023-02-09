@@ -1,0 +1,6 @@
+position	name	timestamp	score
+1	default	nan	0
+2	default	nan	0
+3	default	nan	0
+4	default	nan	0
+5	default	nan	0
