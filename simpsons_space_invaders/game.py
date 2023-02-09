@@ -6,10 +6,12 @@ import pygame, os
 from time import time, sleep
 import pygame_menu
 from pygame_menu import themes
+from datetime import datetime
+import pandas as pd
 
 # Internal
 from simpsons_space_invaders.player import Player
-from simpsons_space_invaders.utils import Text, play_sound
+from simpsons_space_invaders.utils import Text, play_sound, User, curate_scores
 import simpsons_space_invaders.settings as s
 from simpsons_space_invaders.projectiles import Bullet, LemonBullet, PepperBullet, ColaBomb
 from simpsons_space_invaders.powerups import PowerupDropper, LEMON_POWER_DUR, PEPPER_POWER_DUR
@@ -25,7 +27,10 @@ enemies_killed_group = pygame.sprite.Group()
 powerup_group = pygame.sprite.Group()
 colabomb_group = pygame.sprite.Group()
 
-
+# Initialise user
+user = User()
+current_scores = pd.read_csv("high_scores.txt", sep = "\t")
+print(current_scores)
 
 # Main game function
 def main():
@@ -337,7 +342,6 @@ def main():
             
         # Check if player died
         if player.health <= 0:
-            # TODO: write the score to a file. 
             play_sound("explosion", 0.5, fadeout_ms=4000, fadeout=True)
             pos_list = list(range(0, 200, 10))
             for dim in pos_list:
@@ -350,18 +354,47 @@ def main():
             running = False  # End the game.
         
     # At the indent of the while loop (when running = False)
+    # add the score to user.  
+    user.add_score(score)
+    user.add_timestamp()
+    # Write to scores and reorder top 5
+    global current_scores
+    current_scores = curate_scores(user, current_scores)
+    current_scores.to_csv("high_scores.txt", sep = "\t", index=False)
     pygame.quit()
 
 # Menus
 mainmenu = pygame_menu.Menu(
-    "Simpsons space invaders",
+    "Simpsons Space Invaders",
     s.WIDTH, s.HEIGHT,
-    theme=themes.THEME_SOLARIZED,
-    onclose=pygame_menu.events.RESET
+    theme=themes.THEME_SOLARIZED
 )
-mainmenu.add.text_input('Name: ', default='username', maxchar=12)
+# Score menu
+score_menu = pygame_menu.Menu(
+    "High Scores",
+    s.WIDTH, s.HEIGHT,
+    theme=themes.THEME_SOLARIZED
+)
+def open_score_menu():
+    mainmenu._open(score_menu)
+mainmenu.add.text_input('Name: ', default='username', maxchar=12, onreturn=user.add_name)
 mainmenu.add.button('Play', main)
+mainmenu.add.button("High scores", open_score_menu)
 mainmenu.add.button('Quit', pygame_menu.events.EXIT)
+score_table = score_menu.add.table(table_id = "score_table", font_size=20)
+score_table.default_cell_padding = 20
+score_table.default_row_background_color = 'white'
+score_table.add_row(["Position", 'Name', 'Time', 'Score'])
+for i in range(0,5):
+    print(current_scores)
+    
+    list_line = current_scores.iloc[i, :].to_list()
+    print(len(list_line))
+    score_table.add_row(current_scores.iloc[1, :].to_list())
+ 
+
+
+# Game loop
 mainmenu.mainloop(s.WIN)
 
 

@@ -2,6 +2,8 @@
 
 import pygame, os
 import random
+from datetime import datetime
+import pandas as pd
 
 class Text:
     """Draw text on screen."""
@@ -36,5 +38,34 @@ def play_sound(folder, volume, fadeout_ms=None, fadeout: bool = False):
     sound.play()
     if fadeout:
         sound.fadeout(fadeout_ms)
+        
+class User:
+    """Holds username, timestamp and score."""
+    def __init__(self):
+        self.username = "default"
+        
+    def add_name(self, username):
+        self.username = username
+        
+    def add_score(self, score):
+        self.score = score
+        
+    def add_timestamp(self):
+        self.datetime = str(datetime.now())[0:16]
+        
+def curate_scores(user:User, current_scores:pd.DataFrame) -> pd.DataFrame:
+    """add the new score, and reorder to top 5."""
+    current_scores_df = current_scores
+    new_score_added = current_scores_df.append({
+        "position": 0, # Dummy
+        "name": user.username,
+        "timestamp": user.datetime,
+        "score": user.score,
+    }, ignore_index = True)
+    scores_sorted = new_score_added.sort_values("score", ascending=False).head(5)
+    scores_sorted["position"] = range(1,6)
+    scores_sorted["timestamp"] = [str(x) for x in scores_sorted["timestamp"]] # cast as str. 
+    return scores_sorted
+    
         
 
