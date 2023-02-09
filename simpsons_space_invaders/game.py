@@ -387,11 +387,11 @@ score_table.default_row_background_color = 'white'
 score_table.add_row(["Position", 'Name', 'Time', 'Score'])
 for i in range(0,5):
     print(current_scores)
-    
     list_line = current_scores.iloc[i, :].to_list()
-    print(len(list_line))
-    score_table.add_row(current_scores.iloc[1, :].to_list())
- 
+    print(list_line)
+    score_table.add_row([str(x) for x in list_line])
+
+ ## try reinstalling pygame-menu 
 
 
 # Game loop
