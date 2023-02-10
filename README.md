@@ -32,7 +32,7 @@ Two quick options, from the project directory:
 ```
 * __Windows:__
 ```
-python ./simpsons_space_invaders/game.py` 
+python ./simpsons_space_invaders/game.py
 ``` 
 
 # How to play
