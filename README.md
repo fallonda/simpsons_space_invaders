@@ -15,22 +15,24 @@ Simple space invaders style game, using snippets from The Simpsons.
 
 # Setup
 
-TODO: coming soon. 
+Prerequisite is to have python (>= 3.9) installed. 
+```
+# Advised to run in a virtualenv
+pip install -r requirements.txt
+```
 
 # Start the game
 
-Two quick options: 
+Two quick options, from the project directory: 
 
-* Assign execute permissions to `run_game.sh`:
-  ```
-  # When in the repo directory
-  chmod u+x run_game.sh
-
-  # You can then launch the game with:
-  ./run_game.sh
-  ```
-* Alternatively, run `python3 ./simpsons_space_invaders/game.py`. 
- 
+* __Linux:__
+```
+./run_game.sh
+```
+* __Windows:__
+```
+python ./simpsons_space_invaders/game.py` 
+``` 
 
 # How to play
 
