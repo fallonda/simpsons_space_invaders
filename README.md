@@ -17,7 +17,8 @@ Simple space invaders style game, using snippets from The Simpsons.
 
 Prerequisite is to have python (>= 3.9) installed. 
 ```
-# Advised to run in a virtualenv
+# Advised to run in a virtualenv. 
+# When in the project directory. 
 pip install -r requirements.txt
 ```
 
