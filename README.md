@@ -20,6 +20,7 @@ Prerequisite is to have python (>= 3.9) installed.
 Setup the virtual environment for the project and activate it:  
 
 ```
+<<<<<<< HEAD
 # Navigate to the project
 cd <path_to_project>
 
@@ -33,6 +34,10 @@ python -m venv ./env
 source ./env/Scripts/activate
 
 # Install the required packages to the new virtual environment
+=======
+# Advised to run in a virtualenv. 
+# When in the project directory. 
+>>>>>>> f64b063c00b05b81d4bde274184be46fea0d2da9
 pip install -r requirements.txt
 ```
 
@@ -46,7 +51,7 @@ Two quick options, from the project directory:
 ```
 * __Windows:__
 ```
-python ./simpsons_space_invaders/game.py` 
+python ./simpsons_space_invaders/game.py
 ``` 
 
 # How to play
