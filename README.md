@@ -15,9 +15,24 @@ Simple space invaders style game, using snippets from The Simpsons.
 
 # Setup
 
-Prerequisite is to have python (>= 3.9) installed. 
+Prerequisite is to have python (>= 3.9) installed.  
+
+Setup the virtual environment for the project and activate it:  
+
 ```
-# Advised to run in a virtualenv
+# Navigate to the project
+cd <path_to_project>
+
+# Setup the new virtual env
+python -m venv ./env
+
+# Activate it (for Windows)
+.\env\Scripts\activate
+
+# Activate it (for Linux)
+source ./env/Scripts/activate
+
+# Install the required packages to the new virtual environment
 pip install -r requirements.txt
 ```
 
